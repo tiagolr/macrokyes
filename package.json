@@ -27,13 +27,18 @@
     "shortcut"
   ],
   "main": "index.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "del": "^3.0.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "DEBUG=app nodemon index.js"
+    "dev": "DEBUG=app nodemon index.js",
+    "build": "node ./bin/build.js"
   },
   "dependencies": {
+    "command-line-args": "^5.0.2",
     "iohook": "^0.2.0",
+    "minimist": "^1.2.0",
     "node-notifier": "^5.2.1",
     "robotjs": "^0.5.1"
   }

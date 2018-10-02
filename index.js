@@ -1,4 +1,5 @@
 const Log = console.log
+// const argv = require('minimist')(process.argv.slice(2))
 const robot = require('robotjs')
 const ioHook = require('iohook')
 const notifier = require('node-notifier')
