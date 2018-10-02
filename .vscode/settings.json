@@ -1,0 +1,10 @@
+{
+  "standard.enable": true,
+  "javascript.validate.enable": false,
+  "standard.options": {
+    "globals": ["$", "jQuery", "fetch"],
+    "ignore": [
+        "node_modules/**"
+    ]
+  }
+}
