@@ -1,4 +1,4 @@
-
+console.log(__dirname)
 // ARGS
 var program = require('commander')
 program
@@ -33,8 +33,11 @@ const shortcuts = {
 // CONFIGS
 let logger
 let configs = {}
-const configFile = './config.json'
+const path = require('path')
 const fs = require('fs')
+const configFile = process.env.GLOBAL
+  ? path.join(__dirname, 'config.json')
+  : './config.json'
 
 function readConfigs () {
   configs = JSON.parse(fs.readFileSync(configFile))
@@ -61,7 +64,10 @@ fs.watch('.', (eventType, filename) => {
 })
 
 // LOGGER
-const logFile = './output.log'
+const logFile = process.env.GLOBAL
+  ? path.join(__dirname, 'output.log')
+  : './output.log'
+
 if (fs.existsSync(logFile)) {
   fs.unlinkSync(logFile) // clear logFile when program runs
 }
@@ -97,7 +103,7 @@ const notifier = require('node-notifier')
 
 const title = 'MacroKyes'
 const recordStart = 'Recording . . .'
-const recordStop = 'Ready'
+const recordStop = 'Record stop'
 
 let keyStrokes = [] // array of detected key presses
 let keysPromise = null // promise of keystrokes being played
