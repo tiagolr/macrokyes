@@ -6,23 +6,28 @@
   },
   "noconsole": {
     "value": false,
-    "flags": "--noconsole",
+    "flags": "    --noconsole",
     "desc": "disables console logging"
   },
   "nolog": {
     "value": false,
-    "flags": "--nolog",
+    "flags": "    --nolog",
     "desc": "disables outputting into log file"
+  },
+  "single": {
+    "value": false,
+    "flags": "    --onetime",
+    "desc": "runs program a single time, terminates when rec shortcut is pressed"
   },
   "recShortcut": {
     "value": "f12",
-    "flags": "--rec [shortcut]",
-    "desc": "rec shortcut eg: ctrl+meta+f12"
+    "flags": "-r, --rec [shortcut]",
+    "desc": "rec shortcut"
   },
   "playShortcut": {
     "value": "f11",
-    "flags": "--play [shortcut]",
-    "desc": "play shortcut eg: ctrl+alt+f12"
+    "flags": "-p, --play [shortcut]",
+    "desc": "play shortcut"
   },
   "playSpeed": {
     "value": 4.0,

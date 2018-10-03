@@ -1,11 +1,3 @@
-console.log(__dirname)
-// ARGS
-var program = require('commander')
-program
-  .name(require('./package.json').name)
-  .version(require('./package.json').version, '-v, --version')
-  .parse(process.argv)
-
 // SHORTCUTS
 const keycodes = require('./keycodes')
 const shortcuts = {
@@ -49,8 +41,8 @@ function readConfigs () {
   shortcuts.rec = shortcuts.parse(configs.recShortcut.value)
   shortcuts.play = shortcuts.parse(configs.playShortcut.value)
 }
-
 readConfigs()
+
 fs.watch('.', (eventType, filename) => {
   if (configFile.endsWith(filename)) {
     logger.info('config.json file changed')
@@ -62,6 +54,22 @@ fs.watch('.', (eventType, filename) => {
     }
   }
 })
+
+// ARGS
+var program = require('commander')
+program
+  .name(require('./package.json').name)
+  .version(require('./package.json').version, '-v, --version')
+
+Object.values(configs).forEach(v => {
+  if (v.value !== undefined) {
+    program.option(v.flags, v.desc)
+  }
+})
+
+program.parse(process.argv)
+
+console.log(process.argv)
 
 // LOGGER
 const logFile = process.env.GLOBAL
