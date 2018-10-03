@@ -1,0 +1,37 @@
+{
+  "loglevel": {
+    "value": "info",
+    "flags": "-l, --loglevel [value]",
+    "desc": "output loglevel (error|info|debug)"
+  },
+  "noconsole": {
+    "value": false,
+    "flags": "--noconsole",
+    "desc": "disables console logging"
+  },
+  "nolog": {
+    "value": false,
+    "flags": "--nolog",
+    "desc": "disables outputting into log file"
+  },
+  "recShortcut": {
+    "value": "f12",
+    "flags": "--rec [shortcut]",
+    "desc": "rec shortcut eg: ctrl+meta+f12"
+  },
+  "playShortcut": {
+    "value": "f11",
+    "flags": "--play [shortcut]",
+    "desc": "play shortcut eg: ctrl+alt+f12"
+  },
+  "playSpeed": {
+    "value": 4.0,
+    "flags": "-s, --speed [value]",
+    "desc": "playback speed factor"
+  },
+  "repeatCount": {
+    "value": 1,
+    "flags": "-c, --count [value]",
+    "desc": "playback repeat count, use -1 for continuous play"
+  }
+}

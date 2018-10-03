@@ -1,18 +1,103 @@
-const Log = console.log
-// const argv = require('minimist')(process.argv.slice(2))
+
+// ARGS
+var program = require('commander')
+program
+  .name(require('./package.json').name)
+  .version(require('./package.json').version, '-v, --version')
+  .parse(process.argv)
+
+// SHORTCUTS
+const keycodes = require('./keycodes')
+const shortcuts = {
+  rec: { key: 'f12', alt: false, ctrl: false, meta: false },
+  play: { key: 'f11', alt: false, ctrl: false, meta: false },
+  parse (str) {
+    const split = str.split('+')
+    return {
+      key: split.pop(),
+      altKey: !!split.find(e => e === 'alt'),
+      ctrlKey: !!split.find(e => e === 'ctrl'),
+      shiftKey: !!split.find(e => e === 'shift'),
+      metaKey: !!split.find(e => e === 'meta' || e === 'command')
+    }
+  },
+  compare (s1, s2) {
+    return s1.key === s2.key &&
+      s1.altKey === s2.altKey &&
+      s1.shiftKey === s2.shiftKey &&
+      s1.ctrlKey === s2.ctrlKey &&
+      s1.metaKey === s2.metaKey
+  }
+}
+
+// CONFIGS
+let logger
+let configs = {}
+const configFile = './config.json'
+const fs = require('fs')
+
+function readConfigs () {
+  configs = JSON.parse(fs.readFileSync(configFile))
+  if (logger) {
+    logger.level = configs.loglevel.value
+    logger.transports[0].silent = configs.nolog.value
+    logger.transports[1].silent = configs.noconsole.value
+  }
+  shortcuts.rec = shortcuts.parse(configs.recShortcut.value)
+  shortcuts.play = shortcuts.parse(configs.playShortcut.value)
+}
+
+readConfigs()
+fs.watch('.', (eventType, filename) => {
+  if (configFile.endsWith(filename)) {
+    logger.info('config.json file changed')
+    try {
+      readConfigs()
+      logger.info('configs updated')
+    } catch (e) {
+      logger.info('failed to read configs.json')
+    }
+  }
+})
+
+// LOGGER
+const logFile = './output.log'
+if (fs.existsSync(logFile)) {
+  fs.unlinkSync(logFile) // clear logFile when program runs
+}
+
+const winston = require('winston')
+logger = winston.createLogger({
+  level: configs.loglevel.value,
+  transports: [
+    new winston.transports.File({
+      filename: logFile,
+      handleExceptions: true,
+      silent: configs.nolog.value,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.simple()
+      )
+    }),
+    new winston.transports.Console({
+      silent: configs.noconsole.value, // TODO depend on argv
+      format: winston.format.combine(
+        winston.format.simple(),
+        winston.format.colorize()
+      ),
+      handleExceptions: true
+    })
+  ]
+})
+
+// INIT
 const robot = require('robotjs')
 const ioHook = require('iohook')
 const notifier = require('node-notifier')
-const keycodes = require('./keycodes')
 
 const title = 'MacroKyes'
 const recordStart = 'Recording . . .'
 const recordStop = 'Ready'
-
-let shortcuts = {
-  toggleRec: 88,
-  play: 87
-}
 
 let keyStrokes = [] // array of detected key presses
 let keysPromise = null // promise of keystrokes being played
@@ -25,20 +110,29 @@ ioHook.on('keyup', async e => {
   }
 
   e.key = keycodes[e.keycode]
+  logger.debug(`${JSON.stringify(e)}`)
   if (!e.key) {
     return
   }
 
-  if (shortcuts.toggleRec === e.keycode) {
+  if (shortcuts.compare(shortcuts.rec, e)) {
+    logger.debug('Rec shortcut')
     await onRecPressed()
-  } else if (shortcuts.play === e.keycode) {
+  } else if (shortcuts.compare(shortcuts.play, e)) {
+    logger.debug('Play shortcut')
     await onPlayPressed()
   } else if (state === 'REC') {
+    logger.debug('Push key: ' + e.key)
     e.timestamp = new Date().getTime()
     keyStrokes.push(e)
   }
 })
 
+ioHook.start()
+logger.info(`logging to ${logFile}`)
+logger.info('Listening for keyboard events')
+
+// AUX
 async function onRecPressed () {
   if (state === 'PLAY') {
     await stopPlay()
@@ -46,13 +140,13 @@ async function onRecPressed () {
 
   if (state === 'REC') {
     state = 'IDLE'
-    Log('RECORD STOP')
+    logger.info('RECORD STOP')
     notifier.notify({
       title,
       message: recordStop
     })
   } else {
-    Log('RECORD START')
+    logger.info('RECORD START')
     notifier.notify({
       title,
       message: recordStart
@@ -69,7 +163,7 @@ async function onPlayPressed () {
   }
 
   if (state === 'REC') {
-    Log('RECORD STOP')
+    logger.info('RECORD STOP')
     state = 'IDLE'
   }
 
@@ -90,7 +184,7 @@ async function playKeys () {
     return
   }
 
-  Log('PLAY')
+  logger.info('PLAY')
   state = 'PLAY'
   let startTime = keyStrokes[0].timestamp
 
@@ -110,7 +204,7 @@ async function playKeys () {
       }))), Promise.resolve()
     )
     .then(() => {
-      Log('STOP PROMISE')
+      logger.info('STOP')
       keysPromise = null
       isStopping = false
       state = 'IDLE'
@@ -129,5 +223,3 @@ function pressKey (e) {
   if (e.metaKey) robot.keyToggle('command', 'up')
   return false
 }
-
-ioHook.start()

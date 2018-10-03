@@ -205,5 +205,5 @@ module.exports = {
   // '0': 'UNDEFINED', // KeyCode Unknown
 
   // CHAR_UNDEFINED	  0xFFFF	// CharCode Unknown
-  /* End Virtual Key Codes */
+  /* End Virtual Key Codes * */
 }

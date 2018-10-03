@@ -14,10 +14,13 @@ console.log(`Building for: ${target}`)
 
 // build
 const dir = `./dist/${target}`
-const filename = 'MacroKyes'
+const filename = 'macrokyes'
 del.sync(`${dir}/**`)
 execSync(`pkg index.js --targets ${target} --output ${dir}/${filename}`, { stdio: [0, 1, 2] })
 console.log()
+
+fs.copyFileSync('./config.json', `${dir}/config.json`)
+console.log('copied config.json')
 
 fs.copyFileSync('./node_modules/robotjs/build/Release/robotjs.node', `${dir}/robotjs.node`)
 console.log('copied robotjs.node')

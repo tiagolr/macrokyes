@@ -32,14 +32,15 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "DEBUG=app nodemon index.js",
+    "dev": "nodemon index.js --ignore config.json",
     "build": "node ./bin/build.js"
   },
   "dependencies": {
-    "command-line-args": "^5.0.2",
+    "commander": "^2.18.0",
     "iohook": "^0.2.0",
     "minimist": "^1.2.0",
     "node-notifier": "^5.2.1",
-    "robotjs": "^0.5.1"
+    "robotjs": "^0.5.1",
+    "winston": "^3.1.0"
   }
 }
