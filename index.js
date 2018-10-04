@@ -66,10 +66,7 @@ Object.values(configs).forEach(v => {
     program.option(v.flags, v.desc)
   }
 })
-
 program.parse(process.argv)
-
-console.log(process.argv)
 
 // LOGGER
 const logFile = process.env.GLOBAL
@@ -108,6 +105,9 @@ logger = winston.createLogger({
 const robot = require('robotjs')
 const ioHook = require('iohook')
 const notifier = require('node-notifier')
+if (program.nonotifs) {
+  notifier.notify = () => {}
+}
 
 const title = 'MacroKyes'
 const recordStart = 'Recording . . .'
@@ -142,9 +142,22 @@ ioHook.on('keyup', async e => {
   }
 })
 
-ioHook.start()
-logger.info(`logging to ${logFile}`)
-logger.info('Listening for keyboard events')
+if (program.config) {
+  // config mode - open config file with text editor and exit app
+  require('open')(configFile)
+  setTimeout(() => {
+    process.kill(process.pid)
+  }, 100)
+} else {
+  if (program.single) {
+    notifier.notify({ title, message: `${recordStart} tap REC shortcut twice to exit` })
+    state = 'REC'
+  }
+  // init program
+  ioHook.start()
+  logger.info(`logging to ${logFile}`)
+  logger.info('Listening for keyboard events')
+}
 
 // AUX
 async function onRecPressed () {
@@ -155,16 +168,13 @@ async function onRecPressed () {
   if (state === 'REC') {
     state = 'IDLE'
     logger.info('RECORD STOP')
-    notifier.notify({
-      title,
-      message: recordStop
-    })
+    notifier.notify({ title, message: recordStop })
   } else {
     logger.info('RECORD START')
-    notifier.notify({
-      title,
-      message: recordStart
-    })
+    if (program.single) {
+      process.kill(process.pid)
+    }
+    notifier.notify({ title, message: recordStart })
     state = 'REC'
     keyStrokes = []
   }
@@ -213,7 +223,7 @@ async function playKeys () {
           setTimeout(() => {
             pressKey(e)
             resolve()
-          }, elapsed)
+          }, elapsed / configs.playSpeed.value)
         }
       }))), Promise.resolve()
     )

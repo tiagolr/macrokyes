@@ -14,10 +14,20 @@
     "flags": "    --nolog",
     "desc": "disables outputting into log file"
   },
+  "nonotifs": {
+    "value": false,
+    "flags": "    --nonotifs",
+    "desc": "disables OS notifications"
+  },
+  "config": {
+    "value": false,
+    "flags": "    --config",
+    "desc": "opens config file with text editor"
+  },
   "single": {
     "value": false,
-    "flags": "    --onetime",
-    "desc": "runs program a single time, terminates when rec shortcut is pressed"
+    "flags": "    --single",
+    "desc": "starts program in record mode, exits on next record call"
   },
   "recShortcut": {
     "value": "f12",
