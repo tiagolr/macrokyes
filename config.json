@@ -44,9 +44,9 @@
     "flags": "-s, --speed [value]",
     "desc": "playback speed factor"
   },
-  "repeatCount": {
+  "count": {
     "value": 1,
     "flags": "-c, --count [value]",
-    "desc": "playback repeat count, use -1 for continuous play"
+    "desc": "playback repeat count, use 0 for continuous play"
   }
 }

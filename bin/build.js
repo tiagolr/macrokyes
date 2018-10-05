@@ -28,3 +28,9 @@ console.log('copied robotjs.node')
 const ioHookBuild = `node-v${process.versions.modules}-${process.platform}-${process.arch}`
 fs.copyFileSync(`./node_modules/iohook/builds/${ioHookBuild}/build/Release/iohook.node`, `${dir}/iohook.node`)
 console.log('copied iohook.node')
+
+if (platform === 'linux') {
+  fs.mkdirSync(`${dir}/vendor`)
+  fs.copyFileSync(`./vendor/xdg-open`, `${dir}/vendor/xdg-open`)
+  console.log('copied xdg-open')
+}

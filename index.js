@@ -27,9 +27,13 @@ let logger
 let configs = {}
 const path = require('path')
 const fs = require('fs')
-const configFile = process.env.GLOBAL
-  ? path.join(__dirname, 'config.json')
-  : './config.json'
+// FIX modified dirname for pkg bundle
+// also using path.resolve instead of package.join to avoid pkg fs
+const dirname = __dirname.substring(1).startsWith('snapshot')
+  ? path.dirname(process.execPath)
+  : __dirname
+
+const configFile = path.resolve(dirname, 'config.json')
 
 function readConfigs () {
   configs = JSON.parse(fs.readFileSync(configFile))
@@ -69,9 +73,7 @@ Object.values(configs).forEach(v => {
 program.parse(process.argv)
 
 // LOGGER
-const logFile = process.env.GLOBAL
-  ? path.join(__dirname, 'output.log')
-  : './output.log'
+const logFile = path.resolve(dirname, 'output.log')
 
 if (fs.existsSync(logFile)) {
   fs.unlinkSync(logFile) // clear logFile when program runs
@@ -142,21 +144,37 @@ ioHook.on('keyup', async e => {
   }
 })
 
-if (program.config) {
-  // config mode - open config file with text editor and exit app
-  require('open')(configFile)
-  setTimeout(() => {
-    process.kill(process.pid)
-  }, 100)
-} else {
+function init () {
   if (program.single) {
     notifier.notify({ title, message: `${recordStart} tap REC shortcut twice to exit` })
     state = 'REC'
   }
   // init program
   ioHook.start()
-  logger.info(`logging to ${logFile}`)
-  logger.info('Listening for keyboard events')
+  logger.info(`${logFile}`)
+  logger.info(`${configFile}`)
+}
+
+function openConfig () {
+  logger.info('open configFile')
+  const open = {
+    darwin: 'open',
+    win: 'start',
+    linux: path.resolve(dirname, 'vendor', 'xdg-open')
+  }
+
+  require('child_process')
+    .exec(`${open[process.platform]} ${configFile}`)
+
+  setTimeout(() => {
+    process.kill(process.pid)
+  }, 100)
+}
+
+if (program.config) {
+  openConfig()
+} else {
+  init()
 }
 
 // AUX
@@ -204,29 +222,33 @@ function stopPlay () {
 }
 
 async function playKeys () {
-  if (!keyStrokes.length) {
-    return
-  }
-
   logger.info('PLAY')
   state = 'PLAY'
-  let startTime = keyStrokes[0].timestamp
 
-  keysPromise = keyStrokes
-    .reduce((chain, e) => chain
-      .then(() => (new Promise(resolve => {
-        if (isStopping) {
-          resolve()
-        } else {
-          const elapsed = e.timestamp - startTime
-          startTime = e.timestamp
-          setTimeout(() => {
-            pressKey(e)
-            resolve()
-          }, elapsed / configs.playSpeed.value)
-        }
-      }))), Promise.resolve()
-    )
+  keysPromise = new Promise(resolve => {
+    let count = 1
+    let _keyStrokes = keyStrokes.concat()
+    const delay = (duration) => new Promise(resolve => setTimeout(resolve, duration))
+
+    const processKeys = async (key, startTime) => {
+      if (isStopping || !key) {
+        return resolve()
+      }
+      const elapsed = key.timestamp - startTime
+      await delay(elapsed / configs.playSpeed.value)
+      pressKey(key)
+
+      // repeat recorded macro
+      if (!_keyStrokes.length && count < configs.count.value) {
+        _keyStrokes = keyStrokes.concat()
+        count++
+      }
+      processKeys(_keyStrokes.shift(), key.timestamp)
+    }
+
+    const key = _keyStrokes.shift()
+    processKeys(key, key.timestamp) // recursivelly process saved keystrokes
+  })
     .then(() => {
       logger.info('STOP')
       keysPromise = null
